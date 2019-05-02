@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ECS">
+      <UniqueIdentifier>{60E1870B-CCEA-877C-5566-9E7CC16E937C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ECS\Component.h">
+      <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\Entity.h">
+      <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ECS\System.h">
+      <Filter>ECS</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game.h" />
+    <ClInclude Include="src\Log.h" />
+    <ClInclude Include="src\TextureManager.h" />
+    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\ECS\Components\Position.h" />
+    <ClInclude Include="src\ECS\Components\Sprite.h" />
+    <ClInclude Include="src\ECS\Systems\RenderSystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\Log.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\TextureManager.cpp" />
+    <ClCompile Include="src\pch.cpp" />
+  </ItemGroup>
+</Project>

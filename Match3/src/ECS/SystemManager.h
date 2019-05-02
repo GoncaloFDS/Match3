@@ -7,12 +7,12 @@ class SystemManager {
 public:
 	void AddSystem(System* system) {
 		m_systems.push_back(system);
-		//system.Init()
+		//system.OnStart()
 	}
 
-	void Update() {
+	void OnUpdate() {
 		for(System* s : m_systems)
-			s->Update();
+			s->OnUpdate();
 	}
 
 	template <typename T, typename ... TArgs>

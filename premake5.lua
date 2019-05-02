@@ -13,6 +13,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["SDL2"] = "Match3/vendor/SDL2"
 IncludeDir["SDL2image"] = "Match3/vendor/SDL2image"
+IncludeDir["Random"] = "Match3/vendor/effolkronium"
 
 project "Match3"
     location "Match3"
@@ -36,7 +37,8 @@ project "Match3"
         "%{prj.name}/src",
         "%{prj.name}/vendor/spdlog/include",
         "%{IncludeDir.SDL2}/include",
-        "%{IncludeDir.SDL2image}/include"
+        "%{IncludeDir.SDL2image}/include",
+        "%{IncludeDir.Random}"
     }
 
     links {

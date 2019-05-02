@@ -17,7 +17,7 @@ inline ComponentId GetComponentTypeId() {
 }
 
 template<typename T>
-inline ComponentId GetComponentTypeId() noexcept {
+ComponentId GetComponentTypeId() noexcept {
 	static ComponentId typeId = GetComponentTypeId();
 	return typeId;
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include "ECS/Entity.h"
+#include "ECS/SystemManager.h"
 
 class Game {
 
@@ -14,8 +15,8 @@ public:
 	void Init(const std::string& title,
 	          int width, int height, bool fullscreen);
 
-	void HandleEvents();
-	void Update();
+	void OnEvent();
+	void OnUpdate();
 	void Clean();
 
 	bool IsRunning() const { return m_isRunning; }
@@ -25,7 +26,7 @@ public:
 private:
 	bool m_isRunning = false;
 	SDL_Window* m_window;
-
+	SystemManager m_systemManager;
 	std::vector<Entity*> m_entities;
 };
 

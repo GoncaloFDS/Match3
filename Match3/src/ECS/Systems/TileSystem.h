@@ -12,9 +12,9 @@ struct TileNode {
 class TileSystem : public System {
 
 public:
-	void Update() override {
+	void OnUpdate() override {
 		for(TileNode* node : m_targets) {
-			node->position->SetX(node->position->x() + 1);
+			//node->position->SetX(node->position->x() + 1);
 			if(Input::IsMouseButtonPressed(SDL_BUTTON(SDL_BUTTON_LEFT))) {
 				node->position->Set(0, 0);
 			}

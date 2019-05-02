@@ -7,11 +7,19 @@ class Sprite : public Component {
 public:
 	Sprite() = default;
 	Sprite(const std::string& path) {
-		SetTexture(path);
+		LoadTexture(path);
 	}
 
-	void SetTexture(const std::string& path) {
+	Sprite(SDL_Texture* texture) {
+		SetTexture(texture);
+	}
+
+	void LoadTexture(const std::string& path) {
 		m_texture = TextureManager::LoadTexture(path);
+	}
+
+	void SetTexture(SDL_Texture* texture) {
+		m_texture = texture;
 	}
 
 	SDL_Texture* GetTexture() const {

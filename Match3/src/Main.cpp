@@ -9,8 +9,8 @@ int main(int argc, char* argv[]) {
 	game->Init("Match3", 800, 640, false);
 
 	while(game->IsRunning()) {
-		game->HandleEvents();
-		game->Update();
+		game->OnEvent();
+		game->OnUpdate();
 	}
 
 	game->Clean();

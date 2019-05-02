@@ -14,4 +14,6 @@
 #include <cstdio>
 
 #include "Log.h"
+#include "random.h"
 
+using Random = effolkronium::random_static;

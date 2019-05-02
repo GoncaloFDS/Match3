@@ -8,31 +8,42 @@
 #include "Input.h"
 #include "ECS/SystemManager.h"
 #include "ECS/Systems/TileSystem.h"
-
-Entity* jewel;
+#include "random.h"
 
 SDL_Renderer* Game::renderer = nullptr;
-SystemManager systemManager;
 
 void Game::Init(const std::string& title, int width, int height, bool fullscreen) {
 
 	Log::Init();
 	LOG_INFO("Initialized Log!");
 	//Create systems
-	auto* tileSystem = systemManager.AddSystem<TileSystem>();
-	auto* renderSystem = systemManager.AddSystem<RenderSystem>();
-	m_isRunning = renderSystem->Init(m_window, title, width, height, fullscreen);
+	auto* tileSystem = m_systemManager.AddSystem<TileSystem>();
+	auto* renderSystem = m_systemManager.AddSystem<RenderSystem>();
+	m_isRunning = renderSystem->OnStart(m_window, title, width, height, fullscreen);
+
+	//Cache Textures
+	TextureManager::CacheTexture("assets/Color-1.png", 0);
+	TextureManager::CacheTexture("assets/Color-2.png", 1);
+	TextureManager::CacheTexture("assets/Color-3.png", 2);
+	TextureManager::CacheTexture("assets/Color-4.png", 3);
+	TextureManager::CacheTexture("assets/Color-5.png", 4);
 
 	//Create GameObjects
-	jewel = new Entity(Jewel);
-	jewel->AddComponent<Position>();
-	jewel->AddComponent<Sprite>("assets/Color-3.png");
-	m_entities.push_back(jewel);
-	systemManager.CreateNodes(jewel);
-	
+	const int xBorder = 200;
+	const int yBorder = 120;
+	for(int x = 0; x < 8; x++) {
+		for(int y = 0; y < 8; y++) {
+			auto* jewel = new Entity(Jewel);
+			jewel->AddComponent<Position>(xBorder + x * 50, yBorder + y * 50);
+			jewel->AddComponent<Sprite>(TextureManager::GetCachedTexture(Random::get(0, 4)));
+			m_entities.push_back(jewel);
+			m_systemManager.CreateNodes(jewel);
+		}
+	}
+
 }
 
-void Game::HandleEvents() {
+void Game::OnEvent() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 
@@ -49,10 +60,9 @@ void Game::HandleEvents() {
 	}
 }
 
-void Game::Update() {
-	auto p = jewel->GetComponent<Position>();
+void Game::OnUpdate() {
 	Input::GetMousePos();
-	systemManager.Update();
+	m_systemManager.OnUpdate();
 }
 
 void Game::Clean() {

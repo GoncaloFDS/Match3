@@ -14,7 +14,7 @@ struct RenderNode {
 class RenderSystem : public System {
 
 public:
-	bool Init(SDL_Window* window, const std::string& title, int width, int height, bool fullscreen) {
+	bool OnStart(SDL_Window* window, const std::string& title, int width, int height, bool fullscreen) {
 		int flags = 0;
 		if(fullscreen)
 			flags = SDL_WINDOW_FULLSCREEN;
@@ -24,8 +24,8 @@ public:
 			return false;
 		}
 
-		window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
-		                          flags);
+		window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		                          width, height, flags);
 		if(window)
 			LOG_INFO("Window Created");
 
@@ -38,14 +38,14 @@ public:
 		return true;
 	}
 
-	void Update() override {
+	void OnUpdate() override {
 		SDL_RenderClear(Game::renderer);
 
 		for(RenderNode* node : m_targets) {
-			//Update Sprite with the Position
+			//OnUpdate Sprite with the Position
 			SDL_Rect dstrect{
 				node->position->x(), node->position->y(),
-				15, 15
+				40, 40
 			};
 			SDL_RenderCopy(Game::renderer, node->sprite->GetTexture(), nullptr, &dstrect);
 		}

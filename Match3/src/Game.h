@@ -27,7 +27,7 @@ private:
 	bool m_isRunning = false;
 	SDL_Window* m_window;
 	SystemManager m_systemManager;
-	std::vector<Entity*> m_entities;
+	std::vector<std::unique_ptr<Entity>> m_entities;
 };
 
 

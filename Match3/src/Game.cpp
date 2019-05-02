@@ -33,11 +33,11 @@ void Game::Init(const std::string& title, int width, int height, bool fullscreen
 	const int yBorder = 120;
 	for(int x = 0; x < 8; x++) {
 		for(int y = 0; y < 8; y++) {
-			auto* jewel = new Entity(Jewel);
+			std::unique_ptr<Entity> jewel = std::make_unique<Entity>();
 			jewel->AddComponent<Position>(xBorder + x * 50, yBorder + y * 50);
 			jewel->AddComponent<Sprite>(TextureManager::GetCachedTexture(Random::get(0, 4)));
-			m_entities.push_back(jewel);
-			m_systemManager.CreateNodes(jewel);
+			m_systemManager.CreateNodes(jewel.get());
+			m_entities.push_back(std::move(jewel)); 
 		}
 	}
 

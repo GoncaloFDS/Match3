@@ -12,16 +12,15 @@ public:
 	}
 
 	template <typename T, typename ... TArgs>
-	T& AddComponent(TArgs&&... mArgs) {
-		T* component = new T(std::forward<TArgs>(mArgs)...);
-		m_components[GetComponentTypeId<T>()] = component;
+	void AddComponent(TArgs&&... mArgs) {
+		std::unique_ptr<T> component = std::make_unique<T>(std::forward<TArgs>(mArgs)...);
 		component->entity = this;
-		return *component;
+		m_components[GetComponentTypeId<T>()] = std::move(component);
 	}
 
 	template <typename T>
 	T& GetComponent() {
-		return *static_cast<T*>(m_components[GetComponentTypeId<T>()]);
+		return *static_cast<T*>(m_components[GetComponentTypeId<T>()].get());
 	}
 
 	template <typename T>
@@ -32,5 +31,5 @@ public:
 	int tag; // eg. jewel, player, camera...defined by the user
 
 private:
-	std::unordered_map<ComponentId, Component*> m_components;
+	std::unordered_map<ComponentId, std::unique_ptr<Component>> m_components;
 };

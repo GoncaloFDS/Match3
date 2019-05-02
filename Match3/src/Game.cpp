@@ -5,52 +5,31 @@
 #include "ECS/Components/Position.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Systems/RenderSystem.h"
+#include "Input.h"
+#include "ECS/SystemManager.h"
+#include "ECS/Systems/TileSystem.h"
 
 Entity* jewel;
 
 SDL_Renderer* Game::renderer = nullptr;
-RenderSystem renderSystem;
-RenderNode* jewelNode;
-
-Game::Game() {}
-
-Game::~Game() {}
+SystemManager systemManager;
 
 void Game::Init(const std::string& title, int width, int height, bool fullscreen) {
 
 	Log::Init();
 	LOG_INFO("Initialized Log!");
+	//Create systems
+	auto* tileSystem = systemManager.AddSystem<TileSystem>();
+	auto* renderSystem = systemManager.AddSystem<RenderSystem>();
+	m_isRunning = renderSystem->Init(m_window, title, width, height, fullscreen);
 
-	int flags = 0;
-	if(fullscreen)
-		flags = SDL_WINDOW_FULLSCREEN;
-
-	if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
-		LOG_ERROR("SDL Failed to Initialize");
-		m_isRunning = false;
-		return;
-	}
-
-	m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
-	if(m_window)
-		LOG_INFO("Window Created");
-
-	renderer = SDL_CreateRenderer(m_window, -1, 0);
-	if(renderer) {
-		SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-		LOG_INFO("Renderer Created");
-	}
-
-	m_isRunning = true;
-
-	jewel = new Entity();
-	auto& p = jewel->AddComponent<Position>();
-	auto& s = jewel->AddComponent<Sprite>("assets/Color-1.png");
-	jewelNode = new RenderNode();
-	jewelNode->position = &p;
-	jewelNode->sprite = &s;
-
-	renderSystem.AddTarget(jewelNode);
+	//Create GameObjects
+	jewel = new Entity(Jewel);
+	jewel->AddComponent<Position>();
+	jewel->AddComponent<Sprite>("assets/Color-3.png");
+	m_entities.push_back(jewel);
+	systemManager.CreateNodes(jewel);
+	
 }
 
 void Game::HandleEvents() {
@@ -72,11 +51,8 @@ void Game::HandleEvents() {
 
 void Game::Update() {
 	auto p = jewel->GetComponent<Position>();
-}
-
-void Game::Render() {
-	renderSystem.Update();
-
+	Input::GetMousePos();
+	systemManager.Update();
 }
 
 void Game::Clean() {

@@ -4,6 +4,8 @@
 
 class Entity {
 public:
+	Entity(const int tag = 0) : tag(tag) {}
+
 	template <typename T>
 	bool ContainsComponent() const {
 		return m_components.count(GetComponentTypeId<T>()) != 0;
@@ -26,7 +28,9 @@ public:
 	void RemoveComponent() {
 		m_components.erase(GetComponentTypeId<T>());
 	}
+
+	int tag; // eg. jewel, player, camera...defined by the user
+
 private:
 	std::unordered_map<ComponentId, Component*> m_components;
-
 };

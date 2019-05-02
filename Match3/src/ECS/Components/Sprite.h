@@ -18,10 +18,6 @@ public:
 		return m_texture;
 	}
 
-	SDL_Rect srcRect = {};
-	SDL_Rect destRect = {};
-
-	
 private:
 	SDL_Texture* m_texture = nullptr;
 };

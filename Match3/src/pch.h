@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sstream>
+#include <cstdio>
 
 #include "Log.h"
 

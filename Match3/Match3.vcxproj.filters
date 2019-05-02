@@ -22,6 +22,9 @@
     <ClInclude Include="src\ECS\Components\Position.h" />
     <ClInclude Include="src\ECS\Components\Sprite.h" />
     <ClInclude Include="src\ECS\Systems\RenderSystem.h" />
+    <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\ECS\SystemManager.h" />
+    <ClInclude Include="src\ECS\Systems\TileSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp" />
@@ -29,5 +32,6 @@
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Input.cpp" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "pch.h"
 #include "Component.h"
+#include "ECS/Components/Size.h"
 
 class Entity {
 public:

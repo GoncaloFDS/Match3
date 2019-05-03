@@ -11,48 +11,41 @@
 #include "random.h"
 
 SDL_Renderer* Game::renderer = nullptr;
+std::vector<std::unique_ptr<Entity>> Game::m_entities;
 
 void Game::Init(const std::string& title, int width, int height, bool fullscreen) {
 
 	Log::Init();
 	LOG_INFO("Initialized Log!");
 	//Create systems
-	auto* tileSystem = m_systemManager.AddSystem<TileSystem>();
-	auto* renderSystem = m_systemManager.AddSystem<RenderSystem>();
-	m_isRunning = renderSystem->OnStart(m_window, title, width, height, fullscreen);
+	m_systemManager.AddSystem<TileSystem>(8, 8);
+	m_systemManager.AddSystem<RenderSystem>(m_window, title, width, height, fullscreen);
 
 	//Cache Textures
-	TextureManager::CacheTexture("assets/Color-1.png", 0);
-	TextureManager::CacheTexture("assets/Color-2.png", 1);
-	TextureManager::CacheTexture("assets/Color-3.png", 2);
-	TextureManager::CacheTexture("assets/Color-4.png", 3);
-	TextureManager::CacheTexture("assets/Color-5.png", 4);
+	TextureManager::CacheTexture("assets/Color-0.png", 0);
+	TextureManager::CacheTexture("assets/Color-1.png", 1);
+	TextureManager::CacheTexture("assets/Color-2.png", 2);
+	TextureManager::CacheTexture("assets/Color-3.png", 3);
+	TextureManager::CacheTexture("assets/Color-4.png", 4);
 
 	//Create GameObjects
-	const int xBorder = 200;
-	const int yBorder = 120;
-	for(int x = 0; x < 8; x++) {
-		for(int y = 0; y < 8; y++) {
-			std::unique_ptr<Entity> jewel = std::make_unique<Entity>();
-			jewel->AddComponent<Position>(xBorder + x * 50, yBorder + y * 50);
-			jewel->AddComponent<Sprite>(TextureManager::GetCachedTexture(Random::get(0, 4)));
-			m_systemManager.CreateNodes(jewel.get());
-			m_entities.push_back(std::move(jewel)); 
-		}
-	}
+	auto background = std::make_unique<Entity>(Tag::Background);
+	background->AddComponent<Size>(true); // fullscreen
+	background->AddComponent<Sprite>("assets/Backdrop13.jpg");
+	m_entities.insert(m_entities.begin(), std::move(background));
 
+	for(auto& e : m_entities)
+		m_systemManager.CreateNodes(e.get());
 }
 
 void Game::OnEvent() {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
+		m_systemManager.OnEvent(event); // propagate the event to every system
 
 		switch(event.type) {
 		case SDL_QUIT:
 			m_isRunning = false;
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			LOG_INFO("button down");
 			break;
 		default:
 			break;
@@ -61,8 +54,8 @@ void Game::OnEvent() {
 }
 
 void Game::OnUpdate() {
-	Input::GetMousePos();
 	m_systemManager.OnUpdate();
+	//SDL_Delay(1600);
 }
 
 void Game::Clean() {
@@ -71,3 +64,11 @@ void Game::Clean() {
 	SDL_Quit();
 	LOG_INFO("Game Context Destroyed");
 }
+
+Entity* Game::CreateEntity(Tag tag) {
+
+	std::unique_ptr<Entity> e = std::make_unique<Entity>(tag);
+	m_entities.push_back(std::move(e));
+	return m_entities.back().get();
+}
+

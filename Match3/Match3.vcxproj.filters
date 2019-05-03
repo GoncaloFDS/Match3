@@ -41,6 +41,8 @@
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\TextureManager.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\ECS\Components\Size.h" />
+    <ClInclude Include="src\Timer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp" />
@@ -49,5 +51,8 @@
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\TextureManager.cpp" />
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
+    <ClCompile Include="src\ECS\Systems\TileSystem.cpp" />
+    <ClCompile Include="src\ECS\Systems\RenderSystem.cpp" />
   </ItemGroup>
 </Project>

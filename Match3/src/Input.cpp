@@ -2,10 +2,10 @@
 #include "Input.h"
 #include <SDL.h>
 
-Input* Input::s_instance = new Input();
+std::unique_ptr<Input> Input::m_instance = std::make_unique<Input>(); 
 
 inline bool Input::IsKeyPressedImpl(int keyCode) {
-	// TODO
+	// TODO: Implement this method
 	return false;
 }
 

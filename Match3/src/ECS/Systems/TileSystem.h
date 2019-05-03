@@ -1,34 +1,54 @@
 #pragma once
 #include "pch.h"
 #include "ECS/System.h"
-#include "ECS/Components/Position.h"
+
+struct Position;
+class Sprite;
+struct Size;
+class Entity;
+struct SDL_Rect;
+
+enum JewelColor {
+	Red = 0,
+	Black,
+	White,
+	Pink,
+	Blue
+};
 
 struct TileNode {
+	Sprite* sprite;
 	Position* position;
+	Size* size;
 
-	TileNode(Position* p) : position(p) {}
+	JewelColor color;
+
+	TileNode(Sprite* sp, Position* pos, Size* sz) :
+		sprite(sp), position(pos), size(sz), color(Red) {}
 };
 
 class TileSystem : public System {
 
 public:
-	void OnUpdate() override {
-		for(TileNode* node : m_targets) {
-			//node->position->SetX(node->position->x() + 1);
-			if(Input::IsMouseButtonPressed(SDL_BUTTON(SDL_BUTTON_LEFT))) {
-				node->position->Set(0, 0);
-			}
-		}
-	}
+	void OnStart(int horizontalTiles, int verticalTiles);
 
-	void CreateNode(Entity* entity) override {
-		if(entity->ContainsComponent<Position>()) {
-			auto* node = new TileNode(&entity->GetComponent<Position>());
-			m_targets.push_back(node);
-		}
+	void OnUpdate() override;
+	void OnEvent(SDL_Event& event) override;
 
-	}
+	void CreateNode(Entity* entity) override;
 
 private:
-	std::vector<TileNode*> m_targets;
+	//std::vector<std::unique_ptr<TileNode>> m_targets;
+	std::vector<std::vector<std::unique_ptr<TileNode>>> m_tiles;
+
+	const int xBorder = 200;
+	const int yBorder = 120;
+	const int innerBorder = 50;
+
+	int m_horizontalTiles;
+	int m_verticalTiles;
+
+	bool IsInsideRect(int x, int y, SDL_Rect& rect);
+	void SelectTile();
+
 };

@@ -15,5 +15,6 @@
 
 #include "Log.h"
 #include "random.h"
+#include "Timer.h"
 
 using Random = effolkronium::random_static;

@@ -8,9 +8,11 @@ int main(int argc, char* argv[]) {
 
 	game->Init("Match3", 800, 640, false);
 
+	Timer::Start();
 	while(game->IsRunning()) {
 		game->OnEvent();
 		game->OnUpdate();
+		Timer::Tick();
 	}
 
 	game->Clean();

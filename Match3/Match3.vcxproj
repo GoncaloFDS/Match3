@@ -99,6 +99,7 @@
   <ItemGroup>
     <ClInclude Include="src\ECS\Component.h" />
     <ClInclude Include="src\ECS\Components\Position.h" />
+    <ClInclude Include="src\ECS\Components\Size.h" />
     <ClInclude Include="src\ECS\Components\Sprite.h" />
     <ClInclude Include="src\ECS\Entity.h" />
     <ClInclude Include="src\ECS\System.h" />
@@ -110,8 +111,11 @@
     <ClInclude Include="src\Log.h" />
     <ClInclude Include="src\TextureManager.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Timer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ECS\Systems\RenderSystem.cpp" />
+    <ClCompile Include="src\ECS\Systems\TileSystem.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\Log.cpp" />
@@ -120,6 +124,7 @@
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\Timer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

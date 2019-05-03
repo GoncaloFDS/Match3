@@ -5,29 +5,39 @@
 
 class SystemManager {
 public:
-	void AddSystem(System* system) {
-		m_systems.push_back(system);
-		//system.OnStart()
-	}
-
 	void OnUpdate() {
-		for(System* s : m_systems)
+		for(auto& s : m_systems)
 			s->OnUpdate();
 	}
 
-	template <typename T, typename ... TArgs>
-	T* AddSystem(TArgs&& ... mArgs) {
-		T* system = new T(std::forward<TArgs>(mArgs)...);
-		m_systems.push_back(system);
-
-		return system;
+	void OnEvent(SDL_Event& event) {
+		for(auto& s : m_systems)
+			s->OnEvent(event);
 	}
 
+	/**
+	 * \brief Creates a new System of type T and call the OnStart method
+	 * \tparam T System derived class
+	 * \tparam TArgs Match correspondent OnStart method arguments 
+	 * \param mArgs arguments passed to the OnStart method od the given System
+	 */
+	template <typename T, typename ... TArgs>
+	void AddSystem(TArgs&& ... mArgs) {
+		std::unique_ptr<T> system = std::make_unique<T>();
+		m_systems.push_back(std::move(system));
+		T* s = static_cast<T*>(m_systems.back().get());
+		s->OnStart(std::forward<TArgs>(mArgs)...);
+	}
+
+	/**
+	 * \brief Generates necessary nodes for each System from the given Entity
+	 * \param entity
+	 */
 	void CreateNodes(Entity* entity) {
-		for(System* s : m_systems)
+		for(auto& s : m_systems)
 			s->CreateNode(entity);
 	}
 
 private:
-	std::vector<System*> m_systems;
+	std::vector<std::unique_ptr<System>> m_systems;
 };

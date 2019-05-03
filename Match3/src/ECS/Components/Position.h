@@ -1,26 +1,20 @@
 #pragma once
 #include "ECS/Component.h"
 
-class Position : public Component {
+struct Position : public Component {
+	Position(int xy) : x(xy), y(xy) {}
 
-public:
-	Position(int xy) : m_x(xy), m_y(xy) {}
+	Position(int xPos = 0, int yPos = 0) : Component(), x(xPos), y(yPos) {}
 
-	Position(int x = 0, int y = 0) : m_x(x), m_y(y) {}
-
-	int x() { return m_x; }
-	int y() { return m_y; }
-
-	void Set(int x, int y) {
-		m_x = x;
-		m_y = y;
+	void Set(int xPos, int yPos) {
+		x = xPos;
+		y = yPos;
 	}
 
-	void SetX(int x) { m_x = x; }
-	void SetY(int y) { m_y = y; }
+	void SetX(int xPos) { x = xPos; }
+	void SetY(int yPos) { y = yPos; }
 
-private:
-	int m_x;
-	int m_y;
+	int x;
+	int y;
 
 };

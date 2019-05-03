@@ -6,6 +6,12 @@
 #include "ECS/Entity.h"
 #include "ECS/SystemManager.h"
 
+enum Tag {
+	None = 0,
+	Jewel,
+	Background,
+};
+
 class Game {
 
 public:
@@ -19,19 +25,16 @@ public:
 	void OnUpdate();
 	void Clean();
 
+	static Entity* CreateEntity(Tag tag = Tag::None);
+
 	bool IsRunning() const { return m_isRunning; }
 
 	static SDL_Renderer* renderer;
 
 private:
-	bool m_isRunning = false;
+	bool m_isRunning = true;
 	SDL_Window* m_window;
 	SystemManager m_systemManager;
-	std::vector<std::unique_ptr<Entity>> m_entities;
+	static std::vector<std::unique_ptr<Entity>> m_entities;
 };
 
-
-enum Tag {
-	None = 0,
-	Jewel
-};

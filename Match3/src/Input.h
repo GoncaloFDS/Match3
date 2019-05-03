@@ -17,26 +17,26 @@ class Input {
 		virtual float GetMouseYImpl();
 
 	private:
-		static Input* s_instance;
+		static std::unique_ptr<Input> m_instance;
 	};
 
 	inline bool Input::IsKeyPressed(const int keyCode) {
-		return s_instance->IsKeyPressedImpl(keyCode);
+		return m_instance->IsKeyPressedImpl(keyCode);
 	}
 
 	inline bool Input::IsMouseButtonPressed(int button) {
-		return s_instance->IsMouseButtonPressedImpl(button);
+		return m_instance->IsMouseButtonPressedImpl(button);
 	}
 
 	inline std::pair<float, float> Input::GetMousePos() {
-		return s_instance->GetMousePosImpl();
+		return m_instance->GetMousePosImpl();
 	}
 
 	inline float Input::GetMouseX() {
-		return s_instance->GetMouseXImpl();
+		return m_instance->GetMouseXImpl();
 	}
 
 	inline float Input::GetMouseY() {
-		return s_instance->GetMouseYImpl();
+		return m_instance->GetMouseYImpl();
 	}
 

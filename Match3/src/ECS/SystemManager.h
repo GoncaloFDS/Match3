@@ -16,10 +16,10 @@ public:
 	}
 
 	/**
-	 * \brief Creates a new System of type T and call the OnStart method
+	 * \brief Creates a new System of type T and calls the OnStart method
 	 * \tparam T System derived class
 	 * \tparam TArgs Match correspondent OnStart method arguments 
-	 * \param mArgs arguments passed to the OnStart method od the given System
+	 * \param mArgs arguments passed to the OnStart method of the given System
 	 */
 	template <typename T, typename ... TArgs>
 	void AddSystem(TArgs&& ... mArgs) {

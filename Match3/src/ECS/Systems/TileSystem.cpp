@@ -32,6 +32,12 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 void TileSystem::OnUpdate() {
 	if(m_tile1 && m_tile2)
 		SwapTiles();
+	for(int x = 0; x < m_horizontalTiles; x++) {
+		for(int y = 0; y < m_verticalTiles; y++) {
+			if(MatchAt(x, y, m_tiles[x][y]))
+				LOG_INFO("Match at {0}, {1}", x, y);
+		}
+	}
 }
 
 void TileSystem::OnEvent(SDL_Event& event) {
@@ -54,11 +60,14 @@ void TileSystem::CreateNode(Entity* entity) {
 		                                       &entity->GetComponent<Size>(),
 		                                       &entity->GetComponent<TilePosition>());
 
-		node->color = static_cast<JewelColor>(Random::get(0, 4)); // get a random color
+		do node->color = static_cast<JewelColor>(Random::get(0, 4)); // get a random color
+		while(MatchAt(x, y, node->color)); // prevent matches on the first board
+
 		node->sprite->SetTexture(TextureManager::GetCachedTexture(node->color));
 		node->tilePosition->x = x;
 		node->tilePosition->y = y;
-		m_tiles[x][y] = std::move(node);
+		m_tiles[x][y] = node->color;
+		m_targets.push_back(std::move(node));
 		if(++y >= m_verticalTiles) {
 			y = 0;
 			x++;
@@ -76,24 +85,12 @@ void TileSystem::SwapTiles() {
 	if(std::abs(m_tile1->tilePosition->x - m_tile2->tilePosition->x) +
 		std::abs(m_tile1->tilePosition->y - m_tile2->tilePosition->y) <= 1) {
 
-		LOG_INFO("Swaping tile [{0}][{1}] with tile [{2}][{3}]",
-		         m_tile1->tilePosition->x, m_tile1->tilePosition->y,
-		         m_tile2->tilePosition->x, m_tile2->tilePosition->y);
+		std::swap(*m_tile1->position, *m_tile2->position);
+		std::swap(*m_tile1->tilePosition, *m_tile2->tilePosition);
 
-		const int tempA = m_tile1->position->x;
-		const int tempB = m_tile1->position->y;
-		const int tempC = m_tile1->tilePosition->x;
-		const int tempD = m_tile1->tilePosition->y;
-
-		m_tile1->position->x = m_tile2->position->x;
-		m_tile1->position->y = m_tile2->position->y;
-		m_tile1->tilePosition->x = m_tile2->tilePosition->x;
-		m_tile1->tilePosition->y = m_tile2->tilePosition->y;
-
-		m_tile2->position->x = tempA;
-		m_tile2->position->y = tempB;
-		m_tile2->tilePosition->x = tempC;
-		m_tile2->tilePosition->y = tempD;
+		m_tiles[m_tile1->tilePosition->x][m_tile1->tilePosition->y] = m_tile1->color;
+		m_tiles[m_tile2->tilePosition->x][m_tile2->tilePosition->y] = m_tile2->color;
+		
 
 		m_tile1->sprite->alpha = 255;
 		m_tile2->sprite->alpha = 255;
@@ -105,9 +102,7 @@ void TileSystem::SwapTiles() {
 void TileSystem::SelectTile(bool isKeyDownEvent) {
 	auto [mouseX, mouseY] = Input::GetMousePos();
 
-	for(int x = 0; x < m_horizontalTiles; x++) {
-		for(int y = 0; y < m_verticalTiles; y++) {
-			auto& node = m_tiles[x][y];
+	for(auto& node : m_targets){
 			SDL_Rect rect{
 				node->position->x,
 				node->position->y,
@@ -129,7 +124,14 @@ void TileSystem::SelectTile(bool isKeyDownEvent) {
 				}
 				return;
 			}
-		}
 	}
 
+}
+
+bool TileSystem::MatchAt(int x, int y, JewelColor color) {
+	if(x > 1 && m_tiles[x - 1][y] == color && m_tiles[x - 2][y] == color)
+		return true;
+	if(y > 1 && m_tiles[x][y - 1] == color && m_tiles[x][y - 2] == color)
+		return true;
+	return false;
 }

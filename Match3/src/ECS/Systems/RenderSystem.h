@@ -27,4 +27,5 @@ public:
 
 private:
 	std::vector<std::unique_ptr<RenderNode>> m_targets;
+
 };

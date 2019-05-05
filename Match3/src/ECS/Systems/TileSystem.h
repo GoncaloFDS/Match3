@@ -24,9 +24,10 @@ struct TileNode {
 	TilePosition* tilePosition;
 
 	JewelColor color;
+	bool isMatched;
 
 	TileNode(Sprite* sp, Position* pos, Size* sz, TilePosition* tp) :
-		sprite(sp), position(pos), size(sz), tilePosition(tp), color(Red) {}
+		sprite(sp), position(pos), size(sz), tilePosition(tp), color(Red), isMatched(false) {}
 };
 
 class TileSystem : public System {
@@ -40,8 +41,8 @@ public:
 	void CreateNode(Entity* entity) override;
 
 private:
-	std::vector<std::unique_ptr<TileNode>> m_targets;
-	std::vector<std::vector<JewelColor>> m_tiles;
+	//std::vector<std::unique_ptr<TileNode>> m_targets;
+	std::vector<std::vector<std::unique_ptr<TileNode>>> m_tiles;
 
 	const int xBorder = 200;
 	const int yBorder = 120;
@@ -56,6 +57,7 @@ private:
 	bool IsInsideRect(int x, int y, SDL_Rect& rect);
 	void SwapTiles();
 	void SelectTile(bool isKeyDownEvent);
-	bool MatchAt(int x, int y, JewelColor color);
+	bool CheckMatchAt(int x, int y, JewelColor color);
+	int MatchAt(int x, int y, JewelColor color);
 
 };

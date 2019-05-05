@@ -34,8 +34,13 @@ void TileSystem::OnUpdate() {
 		SwapTiles();
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
-			if(MatchAt(x, y, m_tiles[x][y]))
-				LOG_INFO("Match at {0}, {1}", x, y);
+			MatchAt(x, y, m_tiles[x][y]->color);
+		}
+	}
+	for(int x = 0; x < m_horizontalTiles; x++) {
+		for(int y = 0; y < m_verticalTiles; y++) {
+			if(m_tiles[x][y]->isMatched)
+				m_tiles[x][y]->sprite->alpha = 30;
 		}
 	}
 }
@@ -61,13 +66,12 @@ void TileSystem::CreateNode(Entity* entity) {
 		                                       &entity->GetComponent<TilePosition>());
 
 		do node->color = static_cast<JewelColor>(Random::get(0, 4)); // get a random color
-		while(MatchAt(x, y, node->color)); // prevent matches on the first board
+		while(CheckMatchAt(x, y, node->color)); // prevent matches on the first board
 
 		node->sprite->SetTexture(TextureManager::GetCachedTexture(node->color));
 		node->tilePosition->x = x;
 		node->tilePosition->y = y;
-		m_tiles[x][y] = node->color;
-		m_targets.push_back(std::move(node));
+		m_tiles[x][y] = std::move(node);
 		if(++y >= m_verticalTiles) {
 			y = 0;
 			x++;
@@ -88,9 +92,8 @@ void TileSystem::SwapTiles() {
 		std::swap(*m_tile1->position, *m_tile2->position);
 		std::swap(*m_tile1->tilePosition, *m_tile2->tilePosition);
 
-		m_tiles[m_tile1->tilePosition->x][m_tile1->tilePosition->y] = m_tile1->color;
-		m_tiles[m_tile2->tilePosition->x][m_tile2->tilePosition->y] = m_tile2->color;
-		
+		m_tiles[m_tile1->tilePosition->x][m_tile1->tilePosition->y].swap(
+			m_tiles[m_tile2->tilePosition->x][m_tile2->tilePosition->y]);
 
 		m_tile1->sprite->alpha = 255;
 		m_tile2->sprite->alpha = 255;
@@ -101,8 +104,9 @@ void TileSystem::SwapTiles() {
 
 void TileSystem::SelectTile(bool isKeyDownEvent) {
 	auto [mouseX, mouseY] = Input::GetMousePos();
-
-	for(auto& node : m_targets){
+	for(int x = 0; x < m_horizontalTiles; x++) {
+		for(int y = 0; y < m_verticalTiles; y++) {
+			auto& node = m_tiles[x][y];
 			SDL_Rect rect{
 				node->position->x,
 				node->position->y,
@@ -124,14 +128,31 @@ void TileSystem::SelectTile(bool isKeyDownEvent) {
 				}
 				return;
 			}
+		}
 	}
-
 }
 
-bool TileSystem::MatchAt(int x, int y, JewelColor color) {
-	if(x > 1 && m_tiles[x - 1][y] == color && m_tiles[x - 2][y] == color)
+bool TileSystem::CheckMatchAt(int x, int y, JewelColor color) {
+	if(x > 1 && m_tiles[x - 1][y]->color == color && m_tiles[x - 2][y]->color == color)
 		return true;
-	if(y > 1 && m_tiles[x][y - 1] == color && m_tiles[x][y - 2] == color)
+	if(y > 1 && m_tiles[x][y - 1]->color == color && m_tiles[x][y - 2]->color == color)
 		return true;
 	return false;
+}
+
+int TileSystem::MatchAt(int x, int y, JewelColor color) {
+	int points = 0;
+	if(x > 1 && m_tiles[x - 1][y]->color == color && m_tiles[x - 2][y]->color == color) {
+		m_tiles[x][y]->isMatched = true;
+		m_tiles[x - 1][y]->isMatched = true;
+		m_tiles[x - 2][y]->isMatched = true;
+		points++;
+	}
+	if(y > 1 && m_tiles[x][y - 1]->color == color && m_tiles[x][y - 2]->color == color) {
+		m_tiles[x][y]->isMatched = true;
+		m_tiles[x][y - 1]->isMatched = true;
+		m_tiles[x][y - 2]->isMatched = true;
+		points++;
+	}
+	return points;
 }

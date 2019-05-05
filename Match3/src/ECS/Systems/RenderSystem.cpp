@@ -50,6 +50,8 @@ void RenderSystem::OnUpdate() {
 	}
 
 	SDL_RenderPresent(Game::renderer);
+
+
 }
 
 void RenderSystem::CreateNode(Entity* entity) {

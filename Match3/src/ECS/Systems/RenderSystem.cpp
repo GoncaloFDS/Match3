@@ -2,8 +2,7 @@
 #include "RenderSystem.h" 
 #include "Game.h"
 #include "ECS/Components/Sprite.h"
-#include "ECS/Components/Size.h"
-#include "ECS/Components/Position.h"
+#include "ECS/Components/Transform.h"
 
 void RenderSystem::OnStart(SDL_Window* window, const std::string& title, int width, int height, bool fullscreen) {
 	int flags = 0;
@@ -34,14 +33,15 @@ void RenderSystem::OnUpdate() {
 	SDL_RenderClear(Game::renderer);
 
 	for(auto& node : m_targets) {
-		if(node->size->fullscreen) {
+		auto& transform = node->transform;
+		if(transform->isFullscreen) {
 			SDL_RenderCopy(Game::renderer, node->sprite->GetTexture(), nullptr, nullptr);
 		}
 		else {
 
 			SDL_Rect dstrect{
-				node->position->x, node->position->y,
-				node->size->w, node->size->h
+				transform->pos.x, transform->pos.y,
+				transform->size.x, transform->size.y
 			};
 			SDL_SetTextureAlphaMod(node->sprite->GetTexture(), node->sprite->alpha);
 			SDL_RenderCopy(Game::renderer, node->sprite->GetTexture(), nullptr, &dstrect);
@@ -57,8 +57,7 @@ void RenderSystem::OnUpdate() {
 void RenderSystem::CreateNode(Entity* entity) {
 	if(entity->tag == Tag::Jewel || entity->tag == Tag::Background) {
 		auto node = std::make_unique<RenderNode>(&entity->GetComponent<Sprite>(),
-		                                         &entity->GetComponent<Position>(),
-		                                         &entity->GetComponent<Size>());
+		                                         &entity->GetComponent<Transform>());
 		m_targets.push_back(std::move(node));
 	}
 

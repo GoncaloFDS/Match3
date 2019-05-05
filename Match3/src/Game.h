@@ -15,15 +15,11 @@ enum Tag {
 class Game {
 
 public:
-	Game() = default;
-	~Game() = default;
-
-	void Init(const std::string& title,
-	          int width, int height, bool fullscreen);
+	Game(const std::string& title, int width, int height, bool fullscreen);
+	~Game();
 
 	void OnEvent();
 	void OnUpdate();
-	void Clean();
 
 	static Entity* CreateEntity(Tag tag = Tag::None);
 
@@ -33,7 +29,7 @@ public:
 
 private:
 	bool m_isRunning = true;
-	SDL_Window* m_window;
+	SDL_Window* m_window {};
 	SystemManager m_systemManager;
 	static std::vector<std::unique_ptr<Entity>> m_entities;
 };

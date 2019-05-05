@@ -4,12 +4,10 @@
 #include "Game.h"
 
 int main(int argc, char* argv[]) {
-	std::unique_ptr<Game> game = std::make_unique<Game>();
+	std::unique_ptr<Game> game = std::make_unique<Game>("Match3", 800, 640, false);
 
 	const int targetFrameRate = 144;
 	const int targetFrameDuration = 1000 / targetFrameRate;
-
-	game->Init("Match3", 800, 640, false);
 
 	Timer::Start();
 	while(game->IsRunning()) {
@@ -24,7 +22,5 @@ int main(int argc, char* argv[]) {
 		Timer::Tick();
 	}
 
-	game->Clean();
-	
 	return 0;
 }

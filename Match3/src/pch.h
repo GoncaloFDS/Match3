@@ -17,4 +17,6 @@
 #include "random.h"
 #include "Timer.h"
 
+#include "Vec2.h"
+
 using Random = effolkronium::random_static;

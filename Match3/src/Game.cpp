@@ -2,18 +2,18 @@
 #include "Game.h"
 #include "TextureManager.h"
 #include "ECS/Entity.h"
-#include "ECS/Components/Position.h"
 #include "ECS/Components/Sprite.h"
 #include "ECS/Systems/RenderSystem.h"
 #include "Input.h"
 #include "ECS/SystemManager.h"
 #include "ECS/Systems/TileSystem.h"
 #include "random.h"
+#include "ECS/Components/Transform.h"
 
 SDL_Renderer* Game::renderer = nullptr;
 std::vector<std::unique_ptr<Entity>> Game::m_entities;
 
-void Game::Init(const std::string& title, int width, int height, bool fullscreen) {
+Game::Game(const std::string& title, int width, int height, bool fullscreen) {
 
 	Log::Init();
 	LOG_INFO("Initialized Log!");
@@ -30,7 +30,7 @@ void Game::Init(const std::string& title, int width, int height, bool fullscreen
 
 	//Create GameObjects
 	auto background = std::make_unique<Entity>(Tag::Background);
-	background->AddComponent<Size>(true); // fullscreen
+	background->AddComponent<Transform>(true); // fullscreen
 	background->AddComponent<Sprite>("assets/Backdrop13.jpg");
 	m_entities.insert(m_entities.begin(), std::move(background));
 
@@ -58,7 +58,7 @@ void Game::OnUpdate() {
 	//SDL_Delay(1600);
 }
 
-void Game::Clean() {
+Game::~Game() {
 	SDL_DestroyWindow(m_window);
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();

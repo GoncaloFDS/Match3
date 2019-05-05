@@ -1,33 +1,22 @@
 #pragma once
 #include "pch.h"
 #include "ECS/System.h"
+#include "ECS/Components/Animation.h"
+#include "ECS/Components/Tile.h"
 
 class Sprite;
 class Entity;
-struct Position;
-struct Size;
+struct Transform;
 struct SDL_Rect;
-struct TilePosition;
-
-enum JewelColor {
-	Red = 0,
-	Black,
-	White,
-	Pink,
-	Blue
-};
 
 struct TileNode {
 	Sprite* sprite;
-	Position* position;
-	Size* size;
-	TilePosition* tilePosition;
+	Transform* transform;
+	Tile* tile;
+	Animation* animation;
 
-	JewelColor color;
-	bool isMatched;
-
-	TileNode(Sprite* sp, Position* pos, Size* sz, TilePosition* tp) :
-		sprite(sp), position(pos), size(sz), tilePosition(tp), color(Red), isMatched(false) {}
+	TileNode(Sprite* sp, Transform* trans, Tile* tp, Animation* anim) :
+		sprite(sp), transform(trans), tile(tp), animation(anim) {}
 };
 
 class TileSystem : public System {
@@ -42,10 +31,10 @@ public:
 
 private:
 	//std::vector<std::unique_ptr<TileNode>> m_targets;
-	std::vector<std::vector<std::unique_ptr<TileNode>>> m_tiles;
+	std::vector<std::vector<std::unique_ptr<TileNode>>> m_grid;
 
 	const int xBorder = 200;
-	const int yBorder = 120;
+	const int yBorder = 460;
 	const int innerBorder = 50;
 
 	int m_horizontalTiles;
@@ -55,9 +44,12 @@ private:
 	TileNode* m_tile2 = nullptr;
 
 	bool IsInsideRect(int x, int y, SDL_Rect& rect);
-	void SwapTiles();
+	vec2 NodeToPixel(TileNode* node) const;
+	void StartSwapAnimation(TileNode* tile1, TileNode* tile2) const;
+	void SwapTiles(TileNode* tile1, TileNode* tile2);
 	void SelectTile(bool isKeyDownEvent);
 	bool CheckMatchAt(int x, int y, JewelColor color);
 	int MatchAt(int x, int y, JewelColor color);
-
+	void CollapseColumns();
+	void RespawnTiles();
 };

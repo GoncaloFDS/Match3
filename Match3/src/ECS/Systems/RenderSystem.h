@@ -3,16 +3,14 @@
 #include <SDL.h>
 
 class Entity;
-struct Size;
 class Sprite;
-struct Position;
+struct Transform;
 
 struct RenderNode {
 	Sprite* sprite;
-	Position* position;
-	Size* size;
+	Transform* transform;
 
-	RenderNode(Sprite* sp, Position* pos, Size* sz) : sprite(sp), position(pos), size(sz) {}
+	RenderNode(Sprite* sp, Transform* trans) : sprite(sp), transform(trans) {}
 };
 
 class RenderSystem : public System {

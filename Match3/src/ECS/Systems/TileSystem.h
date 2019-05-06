@@ -3,6 +3,7 @@
 #include "ECS/System.h"
 #include "ECS/Components/Animation.h"
 #include "ECS/Components/Tile.h"
+#include "vec2.h"
 
 class Sprite;
 class Entity;
@@ -30,23 +31,22 @@ public:
 	void CreateNode(Entity* entity) override;
 
 private:
-	//std::vector<std::unique_ptr<TileNode>> m_targets;
 	std::vector<std::vector<std::unique_ptr<TileNode>>> m_grid;
 
-	const int xBorder = 200;
-	const int yBorder = 460;
-	const int innerBorder = 50;
+	const float m_xBorder = 200;
+	const float m_yBorder = 460;
+	const float m_innerBorder = 50;
 
-	int m_horizontalTiles;
-	int m_verticalTiles;
+	int m_horizontalTiles = 0;
+	int m_verticalTiles = 0;
 
 	TileNode* m_tile1 = nullptr;
 	TileNode* m_tile2 = nullptr;
 
 	bool IsInsideRect(int x, int y, SDL_Rect& rect);
 	vec2 NodeToPixel(TileNode* node) const;
-	void StartSwapAnimation(TileNode* tile1, TileNode* tile2) const;
-	void SwapTiles(TileNode* tile1, TileNode* tile2);
+	void StartSwapAnimation(TileNode* tile1, TileNode* tile2, float duration) const;
+	void SwapTiles(TileNode* tile1, TileNode* tile2, float duration);
 	void SelectTile(bool isKeyDownEvent);
 	bool CheckMatchAt(int x, int y, JewelColor color);
 	int MatchAt(int x, int y, JewelColor color);

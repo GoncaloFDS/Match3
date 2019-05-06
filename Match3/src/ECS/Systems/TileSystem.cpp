@@ -17,7 +17,7 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 	for(int x = 0; x < horizontalTiles; x++) {
 		for(int y = 0; y < horizontalTiles; y++) {
 			Entity* tile = Game::CreateEntity(Tag::Jewel);
-			vec2 pos(xBorder + x * innerBorder, yBorder - y * innerBorder);
+			vec2 pos(m_xBorder + x * m_innerBorder, m_yBorder - y * m_innerBorder);
 			vec2 size(40, 40);
 			tile->AddComponent<Transform>(pos, size);
 			tile->AddComponent<Sprite>();
@@ -31,7 +31,7 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 void TileSystem::OnUpdate() {
 	//Swap Selected Tiles
 	if(m_tile1 && m_tile2) {
-		SwapTiles(m_tile1, m_tile2);
+		SwapTiles(m_tile1, m_tile2, 0.0f);
 		m_tile1 = m_tile2 = nullptr;
 	}
 
@@ -46,7 +46,7 @@ void TileSystem::OnUpdate() {
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
 			if(m_grid[x][y]->tile->isMatched)
-				m_grid[x][y]->sprite->alpha = 90;
+				m_grid[x][y]->sprite->alpha = 70;
 		}
 	}
 
@@ -58,11 +58,11 @@ void TileSystem::OnUpdate() {
 		for(int y = 0; y < m_verticalTiles; y++) {
 			if(m_grid[x][y]->animation->isPlaying) {
 				auto& anim = m_grid[x][y]->animation;
-				m_grid[x][y]->transform->pos += (anim->end - anim->start) * (Timer::delta_s / anim->duration);
+				auto interpolation = anim->duration == 0 ? 1 : (Timer::delta_s / anim->duration);
+				m_grid[x][y]->transform->pos += (anim->end - anim->start) * interpolation;
 				anim->elapsedTime += Timer::delta_s;
 				if(anim->elapsedTime >= anim->duration)
 					anim->isPlaying = false;
-				break;
 			}
 		}
 	}
@@ -94,7 +94,6 @@ void TileSystem::CreateNode(Entity* entity) {
 
 		node->sprite->SetTexture(TextureManager::GetCachedTexture(node->tile->color));
 		node->tile->pos = vec2(x, y);
-		node->animation->duration = 1.0f;
 		m_grid[x][y] = std::move(node);
 		if(++y >= m_verticalTiles) {
 			y = 0;
@@ -110,24 +109,22 @@ bool TileSystem::IsInsideRect(int x, int y, SDL_Rect& rect) {
 }
 
 vec2 TileSystem::NodeToPixel(TileNode* node) const {
-	return vec2(xBorder + node->tile->pos.x * innerBorder, yBorder - node->tile->pos.y * innerBorder);
+	return vec2(m_xBorder + node->tile->pos.x * m_innerBorder, m_yBorder - node->tile->pos.y * m_innerBorder);
 }
 
-void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2) const {
+void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2, float duration) const {
 	tile1->animation->start = tile1->transform->pos;
 	tile1->animation->end = NodeToPixel(tile2);
-	tile1->animation->elapsedTime = 0;
+	tile1->animation->elapsedTime = 0.0f;
 	tile1->animation->isPlaying = true;
-	tile2->animation->start = tile2->transform->pos;
-	tile2->animation->end = NodeToPixel(tile1);
-	tile2->animation->elapsedTime = 0;
-	tile2->animation->isPlaying = true;
+	tile1->animation->duration = duration;
 }
 
-void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2) {
+void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, float duration) {
 	if((tile1->tile->pos - tile2->tile->pos).Quadrance() <= 1) {
 
-		StartSwapAnimation(tile1, tile2);
+		StartSwapAnimation(tile1, tile2, duration);
+		StartSwapAnimation(tile2, tile1, duration);
 		std::swap(tile1->tile->pos, tile2->tile->pos);
 
 		// Swap grid pointers 
@@ -201,10 +198,8 @@ void TileSystem::CollapseColumns() {
 			if(m_grid[x][y]->tile->isMatched) {
 				for(int k = y + 1; k < m_verticalTiles; k++) {
 					if(!m_grid[x][k]->tile->isMatched) {
-
 						m_grid[x][k]->tile->isMatched = false;
-						SwapTiles(m_grid[x][y].get(), m_grid[x][k].get());
-						//break;
+						SwapTiles(m_grid[x][y].get(), m_grid[x][k].get(), .5f);
 					}
 				}
 			}
@@ -212,4 +207,19 @@ void TileSystem::CollapseColumns() {
 	}
 }
 
-void TileSystem::RespawnTiles() {}
+void TileSystem::RespawnTiles() {
+	for(int x = 0; x < m_horizontalTiles; x++) {
+		for(int y = 0; y < m_verticalTiles; y++) {
+			auto& node = m_grid[x][y];
+			if(node->tile->isMatched) {
+
+				do node->tile->color = static_cast<JewelColor>(Random::get(0, 4)); // get a random color
+				while(CheckMatchAt(x, y, node->tile->color)); // prevent matches on the first board
+
+				node->sprite->SetTexture(TextureManager::GetCachedTexture(node->tile->color));
+				node->tile->isMatched = false;
+				node->sprite->alpha = 255;
+			}
+		}
+	}
+}

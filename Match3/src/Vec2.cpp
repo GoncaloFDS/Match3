@@ -6,7 +6,7 @@ vec2::vec2() = default;
 
 vec2::vec2(const float xa, const float ya) : x(xa), y(ya) {}
 
-vec2::vec2(const int xa, const int ya) : x(xa), y(ya) {}
+vec2::vec2(const int xa, const int ya) : x(static_cast<float>(xa)), y(static_cast<float>(ya)) {}
 
 vec2::~vec2() = default;
 
@@ -28,13 +28,6 @@ bool vec2::operator==(vec2& other) const {
 bool vec2::operator!=(vec2& other) const {
 	return !(*this == other);
 }
-
-vec2& vec2::operator=(const vec2& other) {
-	x = other.x;
-	y = other.y;
-	return *this;
-}
-
 
 vec2& vec2::operator+=(const vec2 & other) {
 	x += other.x;

@@ -13,7 +13,7 @@ struct vec2 {
 
 	bool operator==(vec2& other) const;
 	bool operator!=(vec2& other) const;
-	vec2& operator=(const vec2& other);
+	vec2& operator=(const vec2& other) = default;
 
 	vec2& operator+=(const vec2& other);
 	vec2 operator+(const vec2& other) const;

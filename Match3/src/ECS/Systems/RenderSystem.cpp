@@ -39,12 +39,12 @@ void RenderSystem::OnUpdate() {
 		}
 		else {
 
-			SDL_Rect dstrect{
-				transform->pos.x, transform->pos.y,
-				transform->size.x, transform->size.y
+			SDL_Rect rect{
+				static_cast<int>(transform->pos.x), static_cast<int>(transform->pos.y),
+				static_cast<int>(transform->size.x), static_cast<int>(transform->size.y)
 			};
 			SDL_SetTextureAlphaMod(node->sprite->GetTexture(), node->sprite->alpha);
-			SDL_RenderCopy(Game::renderer, node->sprite->GetTexture(), nullptr, &dstrect);
+			SDL_RenderCopy(Game::renderer, node->sprite->GetTexture(), nullptr, &rect);
 			SDL_SetTextureAlphaMod(node->sprite->GetTexture(), 255);
 		}
 	}

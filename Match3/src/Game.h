@@ -12,6 +12,15 @@ enum Tag {
 	Background,
 };
 
+enum class State {
+	Wait,
+	Input,
+	Match,
+	Destroy,
+	Refill,
+	Collapse
+};
+
 class Game {
 
 public:
@@ -26,6 +35,7 @@ public:
 	bool IsRunning() const { return m_isRunning; }
 
 	static SDL_Renderer* renderer;
+	static State state;
 
 private:
 	bool m_isRunning = true;

@@ -9,9 +9,11 @@
 #include "ECS/Systems/TileSystem.h"
 #include "random.h"
 #include "ECS/Components/Transform.h"
+#include "ECS/Systems/AnimationSystem.h"
 
 SDL_Renderer* Game::renderer = nullptr;
 std::vector<std::unique_ptr<Entity>> Game::m_entities;
+State Game::state = State::Input;
 
 Game::Game(const std::string& title, int width, int height, bool fullscreen) {
 
@@ -19,6 +21,7 @@ Game::Game(const std::string& title, int width, int height, bool fullscreen) {
 	LOG_INFO("Initialized Log!");
 	//Create systems
 	m_systemManager.AddSystem<TileSystem>(8, 8);
+	m_systemManager.AddSystem<AnimationSystem>();
 	m_systemManager.AddSystem<RenderSystem>(m_window, title, width, height, fullscreen);
 
 	//Cache Textures

@@ -6,9 +6,10 @@
 class Sprite : public Component {
 public:
 
-	Uint8 alpha = 255;
+	float alpha{255.0f};
 
 	Sprite() = default;
+
 	Sprite(const std::string& path) {
 		LoadTexture(path);
 	}

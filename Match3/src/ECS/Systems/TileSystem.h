@@ -45,11 +45,13 @@ private:
 
 	bool IsInsideRect(int x, int y, SDL_Rect& rect);
 	vec2 NodeToPixel(TileNode* node) const;
+	void StartDestroyAnimation(TileNode* tile) const;
+	void StartRefillAnimation(TileNode* tile) const;
 	void StartSwapAnimation(TileNode* tile1, TileNode* tile2, AnimationState state) const;
 	void SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState state);
 	void SelectTile(bool isKeyDownEvent);
 	bool CheckMatchAt(int x, int y, JewelColor color);
 	int MatchAt(int x, int y, JewelColor color);
 	void CollapseColumns();
-	void RespawnTiles();
+	void RefillTiles();
 };

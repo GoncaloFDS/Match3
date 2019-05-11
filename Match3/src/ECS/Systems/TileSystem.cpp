@@ -7,12 +7,8 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Transform.h"
 
-bool isSwapping = false;
-bool isCollapsing = false;
-bool isExploding = false;
-bool shouldCollapse = false;
-float swapDuration = 1.0f;
-float collapseDuration = 1.5f;
+float swapDuration = 0.5f;
+float collapseDuration = 0.8f;
 
 void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 	m_horizontalTiles = horizontalTiles;
@@ -33,88 +29,69 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 		}
 	}
 
+	Game::state = State::Input;
 }
 
 void TileSystem::OnUpdate() {
 	//Swap Selected Tiles
 	if(m_tile1 && m_tile2 && (m_tile1->tile->pos - m_tile2->tile->pos).Quadrance() <= 1) {
-		isSwapping = true;
-		shouldCollapse = true;
 		SwapTiles(m_tile1, m_tile2, AnimationState::Swapping);
 		m_tile1 = m_tile2 = nullptr;
 	}
 
 	//Look for matches
-	if(!isCollapsing)
+	if(Game::state == State::Match) {
+		int points = 0;
 		for(int x = 0; x < m_horizontalTiles; x++) {
 			for(int y = 0; y < m_verticalTiles; y++) {
-				MatchAt(x, y, m_grid[x][y]->tile->color);
+				points += MatchAt(x, y, m_grid[x][y]->tile->color);
 			}
 		}
+		if(points == 0) 
+			Game::state = State::Input;
+		else
+			Game::state = State::Destroy;
+	}
 
 	//Destroy animation
-	if(!isSwapping) {
+	if(Game::state == State::Destroy) {
 		for(int x = 0; x < m_horizontalTiles; x++) {
 			for(int y = 0; y < m_verticalTiles; y++) {
 				if(m_grid[x][y]->tile->isMatched)
-					m_grid[x][y]->sprite->alpha = 0;
+					StartDestroyAnimation(m_grid[x][y].get());
+					//m_grid[x][y]->sprite->alpha = 50;
 			}
 		}
+		//Game::state = State::Collapse;
+		Game::state = State::Wait;
+		LOG_INFO("Left: Destroy");
 	}
 
-	if(!isSwapping && shouldCollapse) {
+	if(Game::state == State::Collapse) {
 		CollapseColumns();
-		shouldCollapse = false;
+		LOG_INFO("Left: Collapse");
+		Game::state = State::Wait;
 	}
 
-	if(!isSwapping && !isCollapsing)
-		RespawnTiles();
-
-	for(int x = 0; x < m_horizontalTiles; x++) {
-		for(int y = 0; y < m_verticalTiles; y++) {
-			auto& anim = m_grid[x][y]->animation;
-			if(anim->delayTime > 0)
-				anim->delayTime -= Timer::delta_s;
-			else if(anim->isPlaying) {
-				auto interpolation = anim->duration == 0 ? 1 : (Timer::delta_s / anim->duration);
-				m_grid[x][y]->transform->pos += (anim->end - anim->start) * interpolation;
-				anim->elapsedTime += Timer::delta_s;
-				if(anim->elapsedTime >= anim->duration) {
-					anim->isPlaying = false;
-					switch(anim->state) {
-					case AnimationState::None:
-						break;
-					case AnimationState::Swapping:
-						isSwapping = false;
-						break;
-					case AnimationState::Exploding:
-						isExploding = false;
-						break;
-					case AnimationState::Collapsing:
-						isCollapsing = false;
-						break;
-					default:
-						;
-					}
-					anim->state = AnimationState::None;
-
-				}
-			}
-		}
+	if(Game::state == State::Refill) {
+		RefillTiles();
+		LOG_INFO("Left: Refill");
+		Game::state = State::Wait;
 	}
-
 }
 
 void TileSystem::OnEvent(SDL_Event& event) {
 	switch(event.type) {
 	case SDL_MOUSEBUTTONDOWN:
-		if(Input::IsMouseButtonPressed(SDL_BUTTON(SDL_BUTTON_LEFT)))
+		if(Input::IsMouseButtonPressed(SDL_BUTTON(SDL_BUTTON_LEFT)) && Game::state == State::Input)
 			SelectTile(true);
 		break;
 	case SDL_MOUSEBUTTONUP:
-		if(event.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
+		if(event.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && Game::state == State::Input)
 			SelectTile(false);
 		break;
+	case SDL_KEYDOWN:
+		LOG_ERROR("Current state: {0}", static_cast<int>(Game::state));
 	default: ;
 	}
 }
@@ -150,13 +127,37 @@ vec2 TileSystem::NodeToPixel(TileNode* node) const {
 	return vec2(m_xBorder + node->tile->pos.x * m_innerBorder, m_yBorder - node->tile->pos.y * m_innerBorder);
 }
 
+void TileSystem::StartDestroyAnimation(TileNode* tile) const {
+	//tile->sprite->alpha = 50.0f;
+	tile->animation->elapsedTime = 0.0f;
+	tile->animation->isPlaying = true;
+	tile->animation->state = AnimationState::Destroying;
+	tile->animation->duration = .5f;
+	tile->animation->startAlpha = 255;
+	tile->animation->endAlpha = 0;
+	tile->animation->endPos = tile->animation->startPos;
+}
+
+void TileSystem::StartRefillAnimation(TileNode* tile) const {
+	//tile->sprite->alpha = 55;
+	tile->animation->elapsedTime = 0.0f;
+	tile->animation->isPlaying = true;
+	tile->animation->state = AnimationState::Refilling;
+	//tile->animation->delayTime = 2.0f;
+	tile->animation->duration = .5f;
+	tile->animation->startAlpha = 0;
+	tile->animation->endAlpha = 255;
+	tile->animation->endPos = tile->animation->startPos;
+}
+
 void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2, AnimationState state) const {
-	tile1->animation->start = tile1->transform->pos;
-	tile1->animation->end = NodeToPixel(tile2);
+	tile1->animation->startPos = tile1->transform->pos;
+	tile1->animation->endPos = NodeToPixel(tile2);
 	tile1->animation->elapsedTime = 0.0f;
 	tile1->animation->isPlaying = true;
 	tile1->animation->state = state;
 	tile1->animation->duration = state == AnimationState::Swapping ? swapDuration : collapseDuration;
+	tile1->animation->endAlpha = tile1->animation->endAlpha;
 }
 
 void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState state) {
@@ -169,9 +170,9 @@ void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState stat
 	m_grid[tile1->tile->pos.x][tile1->tile->pos.y].swap(
 		m_grid[tile2->tile->pos.x][tile2->tile->pos.y]);
 
-	//}
-	tile1->sprite->alpha = 255;
-	tile2->sprite->alpha = 255;
+	if(state == AnimationState::Swapping) {
+		tile1->sprite->alpha = 255;
+	}
 }
 
 void TileSystem::SelectTile(bool isKeyDownEvent) {
@@ -231,23 +232,27 @@ int TileSystem::MatchAt(int x, int y, JewelColor color) {
 }
 
 void TileSystem::CollapseColumns() {
-	isCollapsing = true;
+	bool collapsed = false;
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
 			if(m_grid[x][y]->tile->isMatched) {
 				for(int k = y + 1; k < m_verticalTiles; k++) {
 					if(!m_grid[x][k]->tile->isMatched) {
-						//m_grid[x][k]->tile->isMatched = false;
 						SwapTiles(m_grid[x][y].get(), m_grid[x][k].get(), AnimationState::Collapsing);
+						collapsed = true;
 						break;
 					}
 				}
+				if(!collapsed && y == m_verticalTiles - 1)
+					SwapTiles(m_grid[x][y].get(), m_grid[x][y].get(), AnimationState::Collapsing);
+
 			}
 		}
 	}
+
 }
 
-void TileSystem::RespawnTiles() {
+void TileSystem::RefillTiles() {
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
 			auto& node = m_grid[x][y];
@@ -258,7 +263,7 @@ void TileSystem::RespawnTiles() {
 
 				node->sprite->SetTexture(TextureManager::GetCachedTexture(node->tile->color));
 				node->tile->isMatched = false;
-				node->sprite->alpha = 255;
+				StartRefillAnimation(node.get());
 			}
 		}
 	}

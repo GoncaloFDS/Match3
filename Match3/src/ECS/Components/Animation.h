@@ -4,13 +4,16 @@
 enum class AnimationState {
 	None = 0,
 	Swapping,
-	Exploding,
-	Collapsing
+	Destroying,
+	Collapsing,
+	Refilling
 };
 
 struct Animation : public Component {
-	vec2 start;
-	vec2 end;
+	vec2 startPos;
+	vec2 endPos;
+	float startAlpha;
+	float endAlpha;
 	float delayTime{0};
 	float elapsedTime{0};
 	float duration{0};

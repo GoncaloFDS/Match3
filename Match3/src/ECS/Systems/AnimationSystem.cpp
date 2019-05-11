@@ -9,7 +9,7 @@ void AnimationSystem::OnUpdate() {
 		if(anim->delayTime > 0)
 			anim->delayTime -= Timer::delta_s;
 		else if(anim->isPlaying) {
-			ComputeAnimation(node.get(), anim);
+			ComputeAnimation(anim, node.get());
 			if(anim->elapsedTime >= anim->duration) {
 				UpdateGameState(anim);
 
@@ -30,7 +30,7 @@ void AnimationSystem::CreateNode(Entity* entity) {
 	}
 }
 
-void AnimationSystem::ComputeAnimation(AnimationNode* node, Animation*& anim) const {
+void AnimationSystem::ComputeAnimation(Animation* anim, AnimationNode* node) const {
 	const auto interpolation = anim->duration == 0 ? 1 : (Timer::delta_s / anim->duration);
 	node->transform->pos += (anim->endPos - anim->startPos) * interpolation;
 	node->sprite->alpha += (anim->endAlpha - anim->startAlpha) * interpolation;

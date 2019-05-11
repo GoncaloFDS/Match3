@@ -11,7 +11,7 @@ enum JewelColor {
 
 struct Tile : public Component {
 
-	vec2 pos;
-	JewelColor color;
-	bool isMatched;
+	vec2 pos{0, 0};
+	JewelColor color{Red};
+	bool isMatched{false};
 };

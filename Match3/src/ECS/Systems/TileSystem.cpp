@@ -9,6 +9,7 @@
 
 float swapDuration = 0.5f;
 float collapseDuration = 0.8f;
+int totalPoints = 0;
 
 void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 	m_horizontalTiles = horizontalTiles;
@@ -33,50 +34,41 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 }
 
 void TileSystem::OnUpdate() {
-	//Swap Selected Tiles
-	if(m_tile1 && m_tile2 && (m_tile1->tile->pos - m_tile2->tile->pos).Quadrance() <= 1) {
-		SwapTiles(m_tile1, m_tile2, AnimationState::Swapping);
-		m_tile1 = m_tile2 = nullptr;
-	}
 
-	//Look for matches
-	if(Game::state == State::Match) {
-		int points = 0;
+	int points = 0;
+	switch(Game::state) {
+
+	case State::Match:
 		for(int x = 0; x < m_horizontalTiles; x++) {
 			for(int y = 0; y < m_verticalTiles; y++) {
 				points += MatchAt(x, y, m_grid[x][y]->tile->color);
 			}
 		}
-		if(points == 0) 
-			Game::state = State::Input;
-		else
-			Game::state = State::Destroy;
-	}
+		Game::state = points == 0 ? State::Input : State::Destroy;
+		totalPoints += points;
+		break;
 
-	//Destroy animation
-	if(Game::state == State::Destroy) {
+	case State::Destroy:
 		for(int x = 0; x < m_horizontalTiles; x++) {
 			for(int y = 0; y < m_verticalTiles; y++) {
 				if(m_grid[x][y]->tile->isMatched)
 					StartDestroyAnimation(m_grid[x][y].get());
-					//m_grid[x][y]->sprite->alpha = 50;
 			}
 		}
-		//Game::state = State::Collapse;
 		Game::state = State::Wait;
-		LOG_INFO("Left: Destroy");
-	}
+		break;
 
-	if(Game::state == State::Collapse) {
+	case State::Collapse:
 		CollapseColumns();
-		LOG_INFO("Left: Collapse");
 		Game::state = State::Wait;
-	}
+		break;
 
-	if(Game::state == State::Refill) {
+	case State::Refill:
 		RefillTiles();
-		LOG_INFO("Left: Refill");
 		Game::state = State::Wait;
+		break;
+
+	default: ;
 	}
 }
 
@@ -87,11 +79,19 @@ void TileSystem::OnEvent(SDL_Event& event) {
 			SelectTile(true);
 		break;
 	case SDL_MOUSEBUTTONUP:
-		if(event.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && Game::state == State::Input)
+		if(event.button.button == SDL_BUTTON(SDL_BUTTON_LEFT) && Game::state == State::Input) {
 			SelectTile(false);
+			//Swap Selected Tiles if they are adjacent to each other
+			if(m_tile1 && m_tile2 && (m_tile1->tile->pos - m_tile2->tile->pos).Quadrance() <= 1) {
+				SwapTiles(m_tile1, m_tile2, AnimationState::Swapping);
+				m_tile1 = m_tile2 = nullptr;
+			}
+		}
 		break;
 	case SDL_KEYDOWN:
 		LOG_ERROR("Current state: {0}", static_cast<int>(Game::state));
+		LOG_INFO("Points: {0}", totalPoints);
+		break;
 	default: ;
 	}
 }
@@ -114,9 +114,7 @@ void TileSystem::CreateNode(Entity* entity) {
 			y = 0;
 			x++;
 		}
-
 	}
-
 }
 
 bool TileSystem::IsInsideRect(int x, int y, SDL_Rect& rect) {
@@ -128,7 +126,6 @@ vec2 TileSystem::NodeToPixel(TileNode* node) const {
 }
 
 void TileSystem::StartDestroyAnimation(TileNode* tile) const {
-	//tile->sprite->alpha = 50.0f;
 	tile->animation->elapsedTime = 0.0f;
 	tile->animation->isPlaying = true;
 	tile->animation->state = AnimationState::Destroying;
@@ -139,11 +136,9 @@ void TileSystem::StartDestroyAnimation(TileNode* tile) const {
 }
 
 void TileSystem::StartRefillAnimation(TileNode* tile) const {
-	//tile->sprite->alpha = 55;
 	tile->animation->elapsedTime = 0.0f;
 	tile->animation->isPlaying = true;
 	tile->animation->state = AnimationState::Refilling;
-	//tile->animation->delayTime = 2.0f;
 	tile->animation->duration = .5f;
 	tile->animation->startAlpha = 0;
 	tile->animation->endAlpha = 255;
@@ -157,7 +152,7 @@ void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2, AnimationS
 	tile1->animation->isPlaying = true;
 	tile1->animation->state = state;
 	tile1->animation->duration = state == AnimationState::Swapping ? swapDuration : collapseDuration;
-	tile1->animation->endAlpha = tile1->animation->endAlpha;
+	tile1->animation->endAlpha = tile1->animation->startAlpha;
 }
 
 void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState state) {
@@ -187,14 +182,12 @@ void TileSystem::SelectTile(bool isKeyDownEvent) {
 				static_cast<int>(node->transform->size.y),
 			};
 			if(IsInsideRect(mouseX, mouseY, rect)) {
-				LOG_INFO("Selecting x = {0}, y = {1}", node->tile->pos.x, node->tile->pos.y);
 				if(m_tile1 == nullptr && isKeyDownEvent) {
 					node->sprite->alpha = 100;
 					m_tile1 = node.get();
 				}
 				else if(m_tile1 && m_tile1 != node.get()) {
 					m_tile2 = node.get();
-
 				}
 				else if(isKeyDownEvent) {
 					m_tile1->sprite->alpha = 255;
@@ -228,7 +221,7 @@ int TileSystem::MatchAt(int x, int y, JewelColor color) {
 		m_grid[x][y - 2]->tile->isMatched = true;
 		points++;
 	}
-	return points;
+	return points == 2 ? points * 2 : points;
 }
 
 void TileSystem::CollapseColumns() {
@@ -243,6 +236,8 @@ void TileSystem::CollapseColumns() {
 						break;
 					}
 				}
+				// fixes edge case where the top tiles have been destroyed
+				// TODO: make a more elegant solution
 				if(!collapsed && y == m_verticalTiles - 1)
 					SwapTiles(m_grid[x][y].get(), m_grid[x][y].get(), AnimationState::Collapsing);
 

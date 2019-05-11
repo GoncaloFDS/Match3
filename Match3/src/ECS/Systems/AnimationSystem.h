@@ -22,6 +22,6 @@ public:
 private:
 	std::vector<std::unique_ptr<AnimationNode>> m_targets;
 
-	void ComputeAnimation(AnimationNode* node, Animation*& anim) const;
+	void ComputeAnimation(Animation* anim, AnimationNode* node) const;
 	void UpdateGameState(Animation* anim);
 };

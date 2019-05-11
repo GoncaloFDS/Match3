@@ -7,6 +7,13 @@
 #include "ECS/Components/Sprite.h"
 #include "ECS/Components/Transform.h"
 
+bool isSwapping = false;
+bool isCollapsing = false;
+bool isExploding = false;
+bool shouldCollapse = false;
+float swapDuration = 1.0f;
+float collapseDuration = 1.5f;
+
 void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 	m_horizontalTiles = horizontalTiles;
 	m_verticalTiles = verticalTiles;
@@ -30,39 +37,68 @@ void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 
 void TileSystem::OnUpdate() {
 	//Swap Selected Tiles
-	if(m_tile1 && m_tile2) {
-		SwapTiles(m_tile1, m_tile2, 0.0f);
+	if(m_tile1 && m_tile2 && (m_tile1->tile->pos - m_tile2->tile->pos).Quadrance() <= 1) {
+		isSwapping = true;
+		shouldCollapse = true;
+		SwapTiles(m_tile1, m_tile2, AnimationState::Swapping);
 		m_tile1 = m_tile2 = nullptr;
 	}
 
 	//Look for matches
-	for(int x = 0; x < m_horizontalTiles; x++) {
-		for(int y = 0; y < m_verticalTiles; y++) {
-			MatchAt(x, y, m_grid[x][y]->tile->color);
+	if(!isCollapsing)
+		for(int x = 0; x < m_horizontalTiles; x++) {
+			for(int y = 0; y < m_verticalTiles; y++) {
+				MatchAt(x, y, m_grid[x][y]->tile->color);
+			}
 		}
-	}
 
 	//Destroy animation
-	for(int x = 0; x < m_horizontalTiles; x++) {
-		for(int y = 0; y < m_verticalTiles; y++) {
-			if(m_grid[x][y]->tile->isMatched)
-				m_grid[x][y]->sprite->alpha = 70;
+	if(!isSwapping) {
+		for(int x = 0; x < m_horizontalTiles; x++) {
+			for(int y = 0; y < m_verticalTiles; y++) {
+				if(m_grid[x][y]->tile->isMatched)
+					m_grid[x][y]->sprite->alpha = 0;
+			}
 		}
 	}
 
-	CollapseColumns();
+	if(!isSwapping && shouldCollapse) {
+		CollapseColumns();
+		shouldCollapse = false;
+	}
 
-	RespawnTiles();
+	if(!isSwapping && !isCollapsing)
+		RespawnTiles();
 
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
-			if(m_grid[x][y]->animation->isPlaying) {
-				auto& anim = m_grid[x][y]->animation;
+			auto& anim = m_grid[x][y]->animation;
+			if(anim->delayTime > 0)
+				anim->delayTime -= Timer::delta_s;
+			else if(anim->isPlaying) {
 				auto interpolation = anim->duration == 0 ? 1 : (Timer::delta_s / anim->duration);
 				m_grid[x][y]->transform->pos += (anim->end - anim->start) * interpolation;
 				anim->elapsedTime += Timer::delta_s;
-				if(anim->elapsedTime >= anim->duration)
+				if(anim->elapsedTime >= anim->duration) {
 					anim->isPlaying = false;
+					switch(anim->state) {
+					case AnimationState::None:
+						break;
+					case AnimationState::Swapping:
+						isSwapping = false;
+						break;
+					case AnimationState::Exploding:
+						isExploding = false;
+						break;
+					case AnimationState::Collapsing:
+						isCollapsing = false;
+						break;
+					default:
+						;
+					}
+					anim->state = AnimationState::None;
+
+				}
 			}
 		}
 	}
@@ -72,10 +108,12 @@ void TileSystem::OnUpdate() {
 void TileSystem::OnEvent(SDL_Event& event) {
 	switch(event.type) {
 	case SDL_MOUSEBUTTONDOWN:
-		SelectTile(true);
+		if(Input::IsMouseButtonPressed(SDL_BUTTON(SDL_BUTTON_LEFT)))
+			SelectTile(true);
 		break;
 	case SDL_MOUSEBUTTONUP:
-		SelectTile(false);
+		if(event.button.button == SDL_BUTTON(SDL_BUTTON_LEFT))
+			SelectTile(false);
 		break;
 	default: ;
 	}
@@ -112,26 +150,26 @@ vec2 TileSystem::NodeToPixel(TileNode* node) const {
 	return vec2(m_xBorder + node->tile->pos.x * m_innerBorder, m_yBorder - node->tile->pos.y * m_innerBorder);
 }
 
-void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2, float duration) const {
+void TileSystem::StartSwapAnimation(TileNode* tile1, TileNode* tile2, AnimationState state) const {
 	tile1->animation->start = tile1->transform->pos;
 	tile1->animation->end = NodeToPixel(tile2);
 	tile1->animation->elapsedTime = 0.0f;
 	tile1->animation->isPlaying = true;
-	tile1->animation->duration = duration;
+	tile1->animation->state = state;
+	tile1->animation->duration = state == AnimationState::Swapping ? swapDuration : collapseDuration;
 }
 
-void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, float duration) {
-	if((tile1->tile->pos - tile2->tile->pos).Quadrance() <= 1) {
+void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState state) {
 
-		StartSwapAnimation(tile1, tile2, duration);
-		StartSwapAnimation(tile2, tile1, duration);
-		std::swap(tile1->tile->pos, tile2->tile->pos);
+	StartSwapAnimation(tile1, tile2, state);
+	StartSwapAnimation(tile2, tile1, state);
+	std::swap(tile1->tile->pos, tile2->tile->pos);
 
-		// Swap grid pointers 
-		m_grid[tile1->tile->pos.x][tile1->tile->pos.y].swap(
-			m_grid[tile2->tile->pos.x][tile2->tile->pos.y]);
+	// Swap grid pointers 
+	m_grid[tile1->tile->pos.x][tile1->tile->pos.y].swap(
+		m_grid[tile2->tile->pos.x][tile2->tile->pos.y]);
 
-	}
+	//}
 	tile1->sprite->alpha = 255;
 	tile2->sprite->alpha = 255;
 }
@@ -193,13 +231,15 @@ int TileSystem::MatchAt(int x, int y, JewelColor color) {
 }
 
 void TileSystem::CollapseColumns() {
+	isCollapsing = true;
 	for(int x = 0; x < m_horizontalTiles; x++) {
 		for(int y = 0; y < m_verticalTiles; y++) {
 			if(m_grid[x][y]->tile->isMatched) {
 				for(int k = y + 1; k < m_verticalTiles; k++) {
 					if(!m_grid[x][k]->tile->isMatched) {
-						m_grid[x][k]->tile->isMatched = false;
-						SwapTiles(m_grid[x][y].get(), m_grid[x][k].get(), .5f);
+						//m_grid[x][k]->tile->isMatched = false;
+						SwapTiles(m_grid[x][y].get(), m_grid[x][k].get(), AnimationState::Collapsing);
+						break;
 					}
 				}
 			}

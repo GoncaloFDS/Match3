@@ -10,13 +10,14 @@
 float swapDuration = 0.5f;
 float collapseDuration = 0.8f;
 int totalPoints = 0;
+bool isUserSwap{false};
 
 void TileSystem::OnStart(int horizontalTiles, int verticalTiles) {
 	m_horizontalTiles = horizontalTiles;
 	m_verticalTiles = verticalTiles;
 	m_grid.resize(horizontalTiles);
 	for(auto& row : m_grid)
-		row.resize(verticalTiles);
+		row.resize(verticalTiles); // Reserve Space for the tiles in the Grid
 
 	for(int x = 0; x < horizontalTiles; x++) {
 		for(int y = 0; y < horizontalTiles; y++) {
@@ -44,8 +45,19 @@ void TileSystem::OnUpdate() {
 				points += MatchAt(x, y, m_grid[x][y]->tile->color);
 			}
 		}
-		Game::state = points == 0 ? State::Input : State::Destroy;
+		//Invalid move -> Swap back
+		if(points == 0 && isUserSwap) {
+			SwapTiles(m_tile2, m_tile1, AnimationState::Swapping); 
+			Game::state = State::Wait;
+		}
+		else if(points == 0)
+			Game::state = State::Input;
+		else
+			Game::state = State::Destroy;
+
+		isUserSwap = false;
 		totalPoints += points;
+		m_tile1 = m_tile2 = nullptr;
 		break;
 
 	case State::Destroy:
@@ -70,6 +82,7 @@ void TileSystem::OnUpdate() {
 
 	default: ;
 	}
+
 }
 
 void TileSystem::OnEvent(SDL_Event& event) {
@@ -84,7 +97,7 @@ void TileSystem::OnEvent(SDL_Event& event) {
 			//Swap Selected Tiles if they are adjacent to each other
 			if(m_tile1 && m_tile2 && (m_tile1->tile->pos - m_tile2->tile->pos).Quadrance() <= 1) {
 				SwapTiles(m_tile1, m_tile2, AnimationState::Swapping);
-				m_tile1 = m_tile2 = nullptr;
+				isUserSwap = true;
 			}
 		}
 		break;
@@ -162,8 +175,7 @@ void TileSystem::SwapTiles(TileNode* tile1, TileNode* tile2, AnimationState stat
 	std::swap(tile1->tile->pos, tile2->tile->pos);
 
 	// Swap grid pointers 
-	m_grid[tile1->tile->pos.x][tile1->tile->pos.y].swap(
-		m_grid[tile2->tile->pos.x][tile2->tile->pos.y]);
+	m_grid[tile1->tile->pos.x][tile1->tile->pos.y].swap(m_grid[tile2->tile->pos.x][tile2->tile->pos.y]);
 
 	if(state == AnimationState::Swapping) {
 		tile1->sprite->alpha = 255;
